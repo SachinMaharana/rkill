@@ -5,25 +5,8 @@ use skim::prelude::*;
 use std::{io::Cursor, ops::Not};
 use sysinfo::{ProcessExt, Signal, System, SystemExt};
 
-impl SkimItem for MyItem {
-    fn text(&self) -> Cow<str> {
-        Cow::Borrowed(&self.inner)
-    }
-
-    fn preview(&self, _context: PreviewContext) -> ItemPreview {
-        if self.inner.starts_with("color") {
-            ItemPreview::AnsiText(format!("\x1b[31mhello:\x1b[m\n{}", self.inner))
-        } else {
-            ItemPreview::Text(format!("hello:\n{}", self.inner))
-        }
-    }
-}
-struct MyItem {
-    inner: String,
-}
 fn main() {
     let processes = processes().unwrap();
-
     let mut ps_names = Vec::new();
 
     for p in processes {
@@ -37,28 +20,29 @@ fn main() {
     let final_names = ps_names.join("\n");
 
     let options = SkimOptionsBuilder::default()
-        .height(Some("30%"))
+        .height(Some("100%"))
         .color(Some("molokai"))
         .reverse(true)
-        .preview(Some("echo -e test"))
+        .preview(Some(
+            "echo {} |  sed 's/  */ /g' | cut -d' ' -f2 | xargs -I cmd cat /proc/cmd/status",
+        ))
         .header(Some("Filter Processes:"))
         .build()
         .unwrap();
     let item_reader = SkimItemReader::default();
     let items = item_reader.of_bufread(Cursor::new(final_names));
     Skim::run_with(&options, Some(items)).map(|out| match out.final_key {
-        Key::Enter => out
-            .selected_items
-            .iter()
-            .for_each(|i| stop_process(&i.text())),
+        Key::Enter => out.selected_items.iter().for_each(|i| stop_process(&i)),
         _ => (),
     });
 }
 
-fn stop_process(item: &str) {
+fn stop_process(item: &Arc<dyn SkimItem>) {
+    // item.preview("" as PreviewContext);
     let s = System::new_all();
+    let it = item.text();
 
-    let item: Vec<String> = item
+    let item: Vec<String> = it
         .split(" ")
         .filter_map(|s| s.is_empty().not().then(|| s.to_string()))
         .collect();
