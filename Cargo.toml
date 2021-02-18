@@ -9,5 +9,8 @@ edition = "2018"
 [dependencies]
 psutil = "3.2.0"
 rand = "0.8.3"
+serde = "1.0.123"
+serde_json = "1.0.62"
 skim = "0.9.4"
+structopt = "0.3.21"
 sysinfo = "0.16.3"
