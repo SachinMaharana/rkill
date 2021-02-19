@@ -55,15 +55,17 @@ fn main() {
     let item_reader = SkimItemReader::default();
     let items = item_reader.of_bufread(Cursor::new(final_names));
     Skim::run_with(&options, Some(items)).map(|out| match out.final_key {
-        Key::Enter => out.selected_items.iter().for_each(|i| stop_process(&i)),
+        Key::Enter => out
+            .selected_items
+            .iter()
+            .for_each(|i| stop_process(i.text())),
         _ => (),
     });
 }
 
-fn stop_process(item: &Arc<dyn SkimItem>) {
+fn stop_process(item: Cow<str>) {
     let s = System::new_all();
-    let it = item.text();
-    let pid = get_pid(it);
+    let pid = get_pid(item);
 
     match pid {
         Some(pid) => {
@@ -76,10 +78,6 @@ fn stop_process(item: &Arc<dyn SkimItem>) {
             return;
         }
     }
-
-    // if let Some(_process) = s.get_process(pid.unwrap()) {
-    //     info(pid);
-    // }
 }
 
 // take care of this
@@ -88,16 +86,22 @@ fn get_pid(it: Cow<str>) -> Option<i32> {
         .split(" ")
         .filter_map(|s| s.is_empty().not().then(|| s.to_string()))
         .collect();
-    dbg!(&item);
 
     if item.is_empty() {
         return None;
     };
 
     if item.len() == 1 {
-        println!("1 {:?}", item);
-        let its = item.iter().nth(0);
-        if let Some(pid) = its {
+        let pids = item.iter().nth(0);
+        return handle_arg(pids);
+    }
+    if item.len() >= 2 {
+        let pids = item.iter().nth(1);
+        return handle_arg(pids);
+    }
+
+    fn handle_arg(pids: Option<&String>) -> Option<i32> {
+        if let Some(pid) = pids {
             if let Ok(pid) = pid.parse() {
                 return Some(pid);
             } else {
@@ -107,23 +111,9 @@ fn get_pid(it: Cow<str>) -> Option<i32> {
             println!("Unable to get");
             return None;
         }
-    }
-    if item.len() >= 2 {
-        let pid = item.iter().nth(1);
+    };
 
-        if let Some(pid) = pid {
-            if let Ok(pid) = pid.parse() {
-                return Some(pid);
-            } else {
-                return None;
-            }
-        } else {
-            return None;
-        }
-    } else {
-        println!("Unable to get");
-        return None;
-    }
+    None
 }
 
 fn info(pid: i32) {
