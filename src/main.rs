@@ -1,10 +1,12 @@
 use chrono::prelude::*;
 use chrono::{DateTime, Utc};
 
+use fmt::Debug;
 use psutil::process::processes;
 use rand::seq::SliceRandom;
 use rand::thread_rng;
 use skim::prelude::*;
+use std::fmt;
 use std::{io::Cursor, ops::Not};
 use structopt::StructOpt;
 use sysinfo::{ProcessExt, Signal, System, SystemExt};
@@ -101,19 +103,29 @@ fn get_pid(it: Cow<str>) -> Option<i32> {
     }
 
     fn handle_arg(pids: Option<&String>) -> Option<i32> {
-        if let Some(pid) = pids {
-            if let Ok(pid) = pid.parse() {
-                return Some(pid);
-            } else {
-                return None;
-            }
-        } else {
-            println!("Unable to get");
-            return None;
+        match pids {
+            Some(pid) => match pid.parse().ok() {
+                Some(pid) => return Some(pid),
+                None => None,
+            },
+            None => return None,
         }
     };
 
     None
+}
+
+fn highlight<T>(present: &str, msg: T)
+where
+    T: Debug,
+{
+    println!(
+        "{}{}: {} {:?}",
+        color::Fg(color::Green),
+        present,
+        color::Fg(color::Yellow),
+        msg
+    );
 }
 
 fn info(pid: i32) {
@@ -124,41 +136,11 @@ fn info(pid: i32) {
         let datetime_utc: DateTime<Utc> = DateTime::from_utc(time, Utc);
         let lstart: DateTime<Local> = DateTime::from(datetime_utc);
         let lstart = lstart.format("%a, %b %e %Y %T").to_string();
-        println!(
-            "{}Name: {} {}",
-            color::Fg(color::Green),
-            color::Fg(color::LightYellow),
-            p.name()
-        );
-        println!(
-            "{}Pid: {} {}",
-            color::Fg(color::Green),
-            color::Fg(color::LightYellow),
-            p.pid()
-        );
-        println!(
-            "{}Status: {} {}",
-            color::Fg(color::Green),
-            color::Fg(color::LightYellow),
-            p.status()
-        );
-        println!(
-            "{}Executable: {} {:?}",
-            color::Fg(color::Green),
-            color::Fg(color::Yellow),
-            p.exe()
-        );
-        println!(
-            "{}Cmd: {} {:?}",
-            color::Fg(color::Green),
-            color::Fg(color::Yellow),
-            p.cmd()
-        );
-        println!(
-            "{}Start Time: {} {:?}",
-            color::Fg(color::Green),
-            color::Fg(color::Yellow),
-            lstart
-        );
+        highlight("Names", p.name());
+        highlight("Pid", p.pid());
+        highlight("Executable", p.exe());
+        highlight("Status", p.status());
+        highlight("Cmd", p.cmd());
+        highlight("Running Since", lstart);
     }
 }
