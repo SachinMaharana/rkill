@@ -82,6 +82,7 @@ fn get_pid(it: Cow<str>) -> Option<i32> {
         .split(" ")
         .filter_map(|s| s.is_empty().not().then(|| s.to_string()))
         .collect();
+    dbg!(&item);
 
     if item.is_empty() {
         return None;
@@ -92,14 +93,14 @@ fn get_pid(it: Cow<str>) -> Option<i32> {
         let its = item.iter().nth(0).unwrap().to_string();
         return Some(its.parse().unwrap());
     }
-    if item.len() == 2 {
+    if item.len() >= 2 {
         println!("2 {:?}", item);
 
         let pid = item.iter().nth(1).unwrap().to_string();
         let pid = pid.parse().unwrap();
         return Some(pid);
     } else {
-        println!("None");
+        println!("Unable to get");
         return None;
     }
 }
