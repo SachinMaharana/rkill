@@ -7,7 +7,7 @@ use rand::thread_rng;
 use skim::prelude::*;
 use std::{io::Cursor, ops::Not};
 use structopt::StructOpt;
-use sysinfo::{ProcessExt, System, SystemExt};
+use sysinfo::{ProcessExt, Signal, System, SystemExt};
 use termion::color;
 
 #[derive(StructOpt, Debug, Clone)]
@@ -69,8 +69,8 @@ fn stop_process(item: Cow<str>) {
 
     match pid {
         Some(pid) => {
-            if let Some(_) = s.get_process(pid) {
-                info(pid)
+            if let Some(process) = s.get_process(pid) {
+                process.kill(Signal::Term);
             }
         }
         None => {
