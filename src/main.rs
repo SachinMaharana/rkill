@@ -1,12 +1,11 @@
-use chrono::prelude::*;
-use chrono::Duration;
-use chrono::{DateTime, TimeZone, Utc};
+use chrono::{format::strftime, prelude::*, Duration};
+use chrono::{DateTime, Utc};
 
 use psutil::process::processes;
 use rand::seq::SliceRandom;
 use rand::thread_rng;
 use skim::prelude::*;
-use std::{io::Cursor, num::NonZeroIsize, ops::Not};
+use std::{io::Cursor, ops::Not};
 use structopt::StructOpt;
 use sysinfo::{ProcessExt, System, SystemExt};
 use termion::color;
@@ -84,6 +83,8 @@ fn info(pid: i32) {
         let time = NaiveDateTime::from_timestamp(p.start_time() as i64, 0);
         let datetime_utc: DateTime<Utc> = DateTime::from_utc(time, Utc);
         let lstart: DateTime<Local> = DateTime::from(datetime_utc);
+        let lstart = lstart.format("%a, %b %e %Y %T").to_string();
+
         println!(
             "{}Name: {} {}",
             color::Fg(color::Green),
