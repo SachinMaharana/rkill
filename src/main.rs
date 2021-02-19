@@ -1,4 +1,4 @@
-use chrono::{format::strftime, prelude::*, Duration};
+use chrono::prelude::*;
 use chrono::{DateTime, Utc};
 
 use psutil::process::processes;
@@ -11,7 +11,7 @@ use sysinfo::{ProcessExt, System, SystemExt};
 use termion::color;
 
 #[derive(StructOpt, Debug, Clone)]
-#[structopt(name = "basic")]
+#[structopt(name = "rkill")]
 struct Opt {
     #[structopt(short = "p", long)]
     pid: Option<String>,
@@ -61,25 +61,38 @@ fn stop_process(item: &Arc<dyn SkimItem>) {
     let it = item.text();
     let pid = get_pid(it);
 
-    if let Some(_process) = s.get_process(pid) {
+    if let Some(_process) = s.get_process(pid.unwrap()) {
         info(pid);
     }
 }
 
-fn get_pid(it: Cow<str>) -> i32 {
+fn get_pid(it: Cow<str>) -> Option<i32> {
     let item: Vec<String> = it
         .split(" ")
         .filter_map(|s| s.is_empty().not().then(|| s.to_string()))
         .collect();
-    let pid = item.iter().nth(1).unwrap().to_string();
-    let pid = pid.parse().unwrap();
-    pid
+
+    if item.is_empty() {
+        return None;
+    };
+
+    if item.len() == 1 {
+        let its = item.iter().nth(0).unwrap().to_string();
+        return Some(its.parse().unwrap());
+    }
+    if item.len() == 2 {
+        let pid = item.iter().nth(1).unwrap().to_string();
+        let pid = pid.parse().unwrap();
+        return Some(pid);
+    } else {
+        return None;
+    }
 }
 
-fn info(pid: i32) {
+fn info(pid: Option<i32>) {
     let s = System::new_all();
 
-    if let Some(p) = s.get_process(pid) {
+    if let Some(p) = s.get_process(pid.unwrap()) {
         let time = NaiveDateTime::from_timestamp(p.start_time() as i64, 0);
         let datetime_utc: DateTime<Utc> = DateTime::from_utc(time, Utc);
         let lstart: DateTime<Local> = DateTime::from(datetime_utc);
