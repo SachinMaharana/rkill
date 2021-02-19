@@ -84,7 +84,6 @@ fn info(pid: i32) {
         let datetime_utc: DateTime<Utc> = DateTime::from_utc(time, Utc);
         let lstart: DateTime<Local> = DateTime::from(datetime_utc);
         let lstart = lstart.format("%a, %b %e %Y %T").to_string();
-
         println!(
             "{}Name: {} {}",
             color::Fg(color::Green),
