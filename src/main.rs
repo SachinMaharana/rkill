@@ -130,17 +130,18 @@ where
 
 fn info(pid: i32) {
     let s = System::new_all();
-
     if let Some(p) = s.get_process(pid) {
         let time = NaiveDateTime::from_timestamp(p.start_time() as i64, 0);
         let datetime_utc: DateTime<Utc> = DateTime::from_utc(time, Utc);
         let lstart: DateTime<Local> = DateTime::from(datetime_utc);
         let lstart = lstart.format("%a, %b %e %Y %T").to_string();
-        highlight("Names", p.name());
+        highlight("Name", p.name());
         highlight("Pid", p.pid());
         highlight("Executable", p.exe());
         highlight("Status", p.status());
         highlight("Cmd", p.cmd());
         highlight("Running Since", lstart);
+    } else {
+        println!("N/A");
     }
 }
