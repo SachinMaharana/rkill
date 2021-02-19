@@ -13,18 +13,19 @@ use termion::color;
 #[derive(StructOpt, Debug, Clone)]
 #[structopt(name = "rkill")]
 struct Opt {
-    #[structopt(short = "p", long)]
+    #[structopt(short = "p", long, help = "Process PID in digits")]
     pid: Option<String>,
 }
 
 fn main() {
     let opt = Opt::from_args();
-    // dbg!(opt.pid);
 
     if let Some(pid) = opt.pid {
         let pid = get_pid(pid.into());
-        info(pid);
-        return;
+        match pid {
+            Some(pid) => return info(pid),
+            None => return,
+        }
     }
 
     let processes = processes().unwrap();
@@ -61,11 +62,21 @@ fn stop_process(item: &Arc<dyn SkimItem>) {
     let it = item.text();
     let pid = get_pid(it);
 
-    if let Some(_process) = s.get_process(pid.unwrap()) {
-        info(pid);
+    match pid {
+        Some(pid) => {
+            if let Some(_) = s.get_process(pid) {
+                info(pid)
+            }
+        }
+        None => return,
     }
+
+    // if let Some(_process) = s.get_process(pid.unwrap()) {
+    //     info(pid);
+    // }
 }
 
+// take care of this
 fn get_pid(it: Cow<str>) -> Option<i32> {
     let item: Vec<String> = it
         .split(" ")
@@ -77,22 +88,26 @@ fn get_pid(it: Cow<str>) -> Option<i32> {
     };
 
     if item.len() == 1 {
+        println!("1 {:?}", item);
         let its = item.iter().nth(0).unwrap().to_string();
         return Some(its.parse().unwrap());
     }
     if item.len() == 2 {
+        println!("2 {:?}", item);
+
         let pid = item.iter().nth(1).unwrap().to_string();
         let pid = pid.parse().unwrap();
         return Some(pid);
     } else {
+        println!("None");
         return None;
     }
 }
 
-fn info(pid: Option<i32>) {
+fn info(pid: i32) {
     let s = System::new_all();
 
-    if let Some(p) = s.get_process(pid.unwrap()) {
+    if let Some(p) = s.get_process(pid) {
         let time = NaiveDateTime::from_timestamp(p.start_time() as i64, 0);
         let datetime_utc: DateTime<Utc> = DateTime::from_utc(time, Utc);
         let lstart: DateTime<Local> = DateTime::from(datetime_utc);
