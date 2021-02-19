@@ -1,12 +1,17 @@
+use chrono::prelude::*;
+use chrono::Duration;
+use chrono::{DateTime, TimeZone, Utc};
+
 use psutil::process::processes;
 use rand::seq::SliceRandom;
 use rand::thread_rng;
 use skim::prelude::*;
-use std::{env, io::Cursor, ops::Not};
+use std::{io::Cursor, num::NonZeroIsize, ops::Not};
 use structopt::StructOpt;
-use sysinfo::{ProcessExt, Signal, System, SystemExt};
+use sysinfo::{ProcessExt, System, SystemExt};
+use termion::color;
 
-#[derive(StructOpt, Debug)]
+#[derive(StructOpt, Debug, Clone)]
 #[structopt(name = "basic")]
 struct Opt {
     #[structopt(short = "p", long)]
@@ -15,7 +20,14 @@ struct Opt {
 
 fn main() {
     let opt = Opt::from_args();
-    dbg!(opt);
+    // dbg!(opt.pid);
+
+    if let Some(pid) = opt.pid {
+        let pid = get_pid(pid.into());
+        info(pid);
+        return;
+    }
+
     let processes = processes().unwrap();
     let mut ps_names = Vec::new();
 
@@ -32,9 +44,7 @@ fn main() {
     let options = SkimOptionsBuilder::default()
         .height(Some("70%"))
         .color(Some("molokai"))
-        .preview(Some(
-            "echo {} |  sed 's/  */ /g' | cut -d' ' -f2 | xargs -I cmd rkill cmd",
-        ))
+        .preview(Some("rkill -p {}"))
         .preview_window(Some("right:60%:wrap"))
         .header(Some("Filter Processes(ctrl+c to exit):"))
         .build()
@@ -50,47 +60,65 @@ fn main() {
 fn stop_process(item: &Arc<dyn SkimItem>) {
     let s = System::new_all();
     let it = item.text();
+    let pid = get_pid(it);
 
+    if let Some(_process) = s.get_process(pid) {
+        info(pid);
+    }
+}
+
+fn get_pid(it: Cow<str>) -> i32 {
     let item: Vec<String> = it
         .split(" ")
         .filter_map(|s| s.is_empty().not().then(|| s.to_string()))
         .collect();
-    let pid = item.iter().nth(1).unwrap();
-
-    let pid = pid.to_string();
+    let pid = item.iter().nth(1).unwrap().to_string();
     let pid = pid.parse().unwrap();
-    println!("{}", pid);
-    if let Some(_process) = s.get_process(pid) {
-        // println!("{:?}", process);
-        info(pid)
-    }
+    pid
 }
 
 fn info(pid: i32) {
     let s = System::new_all();
 
     if let Some(p) = s.get_process(pid) {
-        println!("{}", p.name());
-        println!("{}", p.status());
-        println!("{}", p.start_time());
-        println!("{}", p.cpu_usage());
-        println!("{:?}", p.disk_usage());
-        println!("{:?}", p.parent());
-        println!("{:?}", p.exe());
-        println!("{:?}", p.cmd());
-        println!("{:?}", p.memory());
+        let time = NaiveDateTime::from_timestamp(p.start_time() as i64, 0);
+        let datetime_utc: DateTime<Utc> = DateTime::from_utc(time, Utc);
+        let lstart: DateTime<Local> = DateTime::from(datetime_utc);
+        println!(
+            "{}Name: {} {}",
+            color::Fg(color::Green),
+            color::Fg(color::LightYellow),
+            p.name()
+        );
+        println!(
+            "{}Pid: {} {}",
+            color::Fg(color::Green),
+            color::Fg(color::LightYellow),
+            p.pid()
+        );
+        println!(
+            "{}Status: {} {}",
+            color::Fg(color::Green),
+            color::Fg(color::LightYellow),
+            p.status()
+        );
+        println!(
+            "{}Executable: {} {:?}",
+            color::Fg(color::Green),
+            color::Fg(color::Yellow),
+            p.exe()
+        );
+        println!(
+            "{}Cmd: {} {:?}",
+            color::Fg(color::Green),
+            color::Fg(color::Yellow),
+            p.cmd()
+        );
+        println!(
+            "{}Start Time: {} {:?}",
+            color::Fg(color::Green),
+            color::Fg(color::Yellow),
+            lstart
+        );
     }
 }
-
-// let args: Vec<String> = env::args().collect();
-//     if args.len() > 1 {
-//         let q = &args[1].to_string().to_owned();
-//         println!("{}", q);
-//         let s = q.parse().unwrap();
-
-//         let query = &args[1].is_empty().not();
-//         if *query {
-//             info(s);
-//             return;
-//         }
-//     }
