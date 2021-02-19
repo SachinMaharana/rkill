@@ -1,3 +1,4 @@
+use anyhow::{format_err, Result};
 use chrono::prelude::*;
 use chrono::{DateTime, Utc};
 
@@ -19,7 +20,7 @@ struct Opt {
     pid: Option<String>,
 }
 
-fn main() {
+fn main() -> Result<()> {
     let opt = Opt::from_args();
 
     if let Some(pid) = opt.pid {
@@ -27,18 +28,17 @@ fn main() {
         match pid {
             Some(pid) => return info(pid),
             None => {
-                println!("N/A");
-                return;
+                return Err(format_err!("unable to get process information"));
             }
         }
     }
 
-    let processes = processes().unwrap();
+    let processes = processes()?;
     let mut ps_names = Vec::new();
 
     for p in processes {
-        let p = p.unwrap();
-        let name: String = p.name().unwrap().chars().skip(0).take(23).collect();
+        let p = p?;
+        let name: String = p.name()?.chars().skip(0).take(23).collect();
         ps_names.push(format!("{:25}{:<2}", name, p.pid().to_string(),));
     }
 
@@ -53,7 +53,7 @@ fn main() {
         .preview_window(Some("right:60%:wrap"))
         .header(Some("Filter Processes(ctrl+c to exit):"))
         .build()
-        .unwrap();
+        .expect("Unable to build app");
     let item_reader = SkimItemReader::default();
     let items = item_reader.of_bufread(Cursor::new(final_names));
     Skim::run_with(&options, Some(items)).map(|out| match out.final_key {
@@ -63,6 +63,7 @@ fn main() {
             .for_each(|i| stop_process(i.text())),
         _ => (),
     });
+    Ok(())
 }
 
 fn stop_process(item: Cow<str>) {
@@ -76,7 +77,7 @@ fn stop_process(item: Cow<str>) {
             }
         }
         None => {
-            println!("N/A");
+            println!("Unable to stop process");
             return;
         }
     }
@@ -128,7 +129,7 @@ where
     );
 }
 
-fn info(pid: i32) {
+fn info(pid: i32) -> Result<()> {
     let s = System::new_all();
     if let Some(p) = s.get_process(pid) {
         let time = NaiveDateTime::from_timestamp(p.start_time() as i64, 0);
@@ -142,6 +143,7 @@ fn info(pid: i32) {
         highlight("Cmd", p.cmd());
         highlight("Running Since", lstart);
     } else {
-        println!("N/A");
+        return Err(format_err!("unable to get process information"));
     }
+    Ok(())
 }
