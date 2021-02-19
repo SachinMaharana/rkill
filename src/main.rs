@@ -24,7 +24,10 @@ fn main() {
         let pid = get_pid(pid.into());
         match pid {
             Some(pid) => return info(pid),
-            None => return,
+            None => {
+                println!("N/A");
+                return;
+            }
         }
     }
 
@@ -68,7 +71,10 @@ fn stop_process(item: &Arc<dyn SkimItem>) {
                 info(pid)
             }
         }
-        None => return,
+        None => {
+            println!("N/A");
+            return;
+        }
     }
 
     // if let Some(_process) = s.get_process(pid.unwrap()) {
@@ -90,15 +96,30 @@ fn get_pid(it: Cow<str>) -> Option<i32> {
 
     if item.len() == 1 {
         println!("1 {:?}", item);
-        let its = item.iter().nth(0).unwrap().to_string();
-        return Some(its.parse().unwrap());
+        let its = item.iter().nth(0);
+        if let Some(pid) = its {
+            if let Ok(pid) = pid.parse() {
+                return Some(pid);
+            } else {
+                return None;
+            }
+        } else {
+            println!("Unable to get");
+            return None;
+        }
     }
     if item.len() >= 2 {
-        println!("2 {:?}", item);
+        let pid = item.iter().nth(1);
 
-        let pid = item.iter().nth(1).unwrap().to_string();
-        let pid = pid.parse().unwrap();
-        return Some(pid);
+        if let Some(pid) = pid {
+            if let Ok(pid) = pid.parse() {
+                return Some(pid);
+            } else {
+                return None;
+            }
+        } else {
+            return None;
+        }
     } else {
         println!("Unable to get");
         return None;
