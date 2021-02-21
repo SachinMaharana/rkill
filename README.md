@@ -28,8 +28,6 @@ Run `rkill` to launch the interactive UI.
 
 ### Built With
 
-This section should list any major frameworks that you built your project using. Leave any add-ons/plugins for the acknowledgements section. Here are a few examples.
-
 - [Rust](https://www.rust-lang.org/)
 
 ### Installation
@@ -53,7 +51,7 @@ This section should list any major frameworks that you built your project using.
 
 ## Roadmap
 
-See the [open issues](https://github.com/othneildrew/Best-README-Template/issues) for a list of proposed features (and known issues).
+See the [open issues](https://github.com/sachinmaharana/rkill/issues) for a list of proposed features (and known issues).
 
 <!-- CONTRIBUTING -->
 
