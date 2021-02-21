@@ -1,4 +1,4 @@
-use anyhow::{bail, format_err, Result};
+use anyhow::{format_err, Result};
 use chrono::prelude::*;
 use chrono::{DateTime, Utc};
 
@@ -27,7 +27,7 @@ fn main() -> Result<()> {
     let opt = Opt::from_args();
 
     if let Some(pid) = opt.pid {
-        let pid = get_pid(pid.into());
+        let pid = get_pid(&pid);
         match pid {
             Some(pid) => return info(pid),
             None => {
@@ -64,13 +64,13 @@ fn main() -> Result<()> {
         Key::Enter => out
             .selected_items
             .iter()
-            .for_each(|i| stop_process(i.text())),
+            .for_each(|i| stop_process(i.text().as_ref())),
         _ => (),
     });
     Ok(())
 }
 
-fn stop_process(item: Cow<str>) {
+fn stop_process(item: &str) {
     let s = System::new_all();
     let pid = get_pid(item);
 
@@ -90,7 +90,7 @@ fn stop_process(item: Cow<str>) {
     }
 }
 
-fn get_pid(it: Cow<str>) -> Option<i32> {
+fn get_pid(it: &str) -> Option<i32> {
     let item: Vec<String> = it
         .split(" ")
         .filter_map(|s| s.is_empty().not().then(|| s.to_string()))
