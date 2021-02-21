@@ -50,11 +50,7 @@ fn main() -> Result<()> {
     let final_names = ps_names.join("\n");
 
     let options = SkimOptionsBuilder::default()
-<<<<<<< Updated upstream
-        .height(Some("70%"))
-=======
         .height(Some("40%"))
->>>>>>> Stashed changes
         .color(Some("molokai"))
         .preview(Some("rkill -p {}"))
         .preview_window(Some("right:60%:wrap"))
