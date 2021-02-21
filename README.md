@@ -34,6 +34,14 @@ Run `rkill` to launch the interactive UI.
 
 Download the latest binary fom the [release](https://github.com/SachinMaharana/rkill/releases/tag/v0.1.0) page.
 
+```
+wget https://github.com/SachinMaharana/rkill/releases/download/v0.1.0/rkill
+
+chmod +x rkill
+
+cp rkill /usr/local/bin
+```
+
 ### Build from source
 
 1. Clone the repo
