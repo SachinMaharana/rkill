@@ -14,7 +14,10 @@ use sysinfo::{ProcessExt, Signal, System, SystemExt};
 use termion::color;
 
 #[derive(StructOpt, Debug, Clone)]
-#[structopt(name = "rkill")]
+#[structopt(
+    name = "rkill",
+    about = "interactive cli to kill process supporting linux"
+)]
 struct Opt {
     #[structopt(short = "p", long, help = "Process PID in digits")]
     pid: Option<String>,
@@ -47,7 +50,11 @@ fn main() -> Result<()> {
     let final_names = ps_names.join("\n");
 
     let options = SkimOptionsBuilder::default()
+<<<<<<< Updated upstream
         .height(Some("70%"))
+=======
+        .height(Some("40%"))
+>>>>>>> Stashed changes
         .color(Some("molokai"))
         .preview(Some("rkill -p {}"))
         .preview_window(Some("right:60%:wrap"))
