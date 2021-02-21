@@ -32,7 +32,9 @@ Run `rkill` to launch the interactive UI.
 
 ### Installation
 
-## Build from source
+Download the latest binary fom the [release](https://github.com/SachinMaharana/rkill/releases/tag/v0.1.0) page.
+
+### Build from source
 
 1. Clone the repo
    ```sh
