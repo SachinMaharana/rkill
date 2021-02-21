@@ -50,7 +50,7 @@
 
 Run `rkill` to launch the interactive UI.
 
-[![asciicast](https://asciinema.org/a/CMK6UCxTt6UpMIcEOBnUrUaBw.png)](https://asciinema.org/a/CMK6UCxTt6UpMIcEOBnUrUaBw)
+[![asciicast](assets/rkill-scrn.png)](https://asciinema.org/a/CMK6UCxTt6UpMIcEOBnUrUaBw)
 
 ### Built With
 
