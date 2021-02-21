@@ -75,4 +75,4 @@ Distributed under the MIT License. See `LICENSE` for more information.
 
 ## Contact
 
-Project Link: [https://github.com/your_username/repo_name](https://github.com/sachinmaharana/rkill)
+Project Link: [https://github.com/sachinmaharana/rkill](https://github.com/sachinmaharana/rkill)
