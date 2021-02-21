@@ -1,6 +1,6 @@
 <br />
 <p align="center">
-  <a href="https://github.com/othneildrew/Best-README-Template">
+  <a href="https://github.com/sachinmaharana/rkill">
     <img src="assets/rkill.png" alt="Logo" width="200" height="200" style="color: "white">
   </a>
 
@@ -9,14 +9,14 @@
   <p align="center">
     An interactive cli to kill process, currently supports linux.
     <br />
-    <a href="https://github.com/othneildrew/Best-README-Template"><strong>Explore the docs »</strong></a>
+    <a href="https://github.com/sachinmaharana/rkill"><strong>Explore the docs »</strong></a>
     <br />
     <br />
-    <a href="https://github.com/othneildrew/Best-README-Template">View Demo</a>
+    <a href="https://github.com/sachinmaharana/rkill">View Demo</a>
     ·
-    <a href="https://github.com/othneildrew/Best-README-Template/issues">Report Bug</a>
+    <a href="https://github.com/sachinmaharana/rkill/issues">Report Bug</a>
     ·
-    <a href="https://github.com/othneildrew/Best-README-Template/issues">Request Feature</a>
+    <a href="https://github.com/sachinmaharana/rkill/issues">Request Feature</a>
   </p>
 </p>
 
