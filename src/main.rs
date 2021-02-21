@@ -10,7 +10,7 @@ use skim::prelude::*;
 use std::fmt;
 use std::{io::Cursor, ops::Not};
 use structopt::StructOpt;
-use sysinfo::{ProcessExt, Signal, System, SystemExt};
+use sysinfo::{Process, ProcessExt, Signal, System, SystemExt};
 use termion::color;
 
 #[derive(StructOpt, Debug, Clone)]
@@ -47,7 +47,7 @@ fn main() -> Result<()> {
     let final_names = ps_names.join("\n");
 
     let options = SkimOptionsBuilder::default()
-        .height(Some("70%"))
+        .height(Some("50%"))
         .color(Some("molokai"))
         .preview(Some("rkill -p {}"))
         .preview_window(Some("right:60%:wrap"))
@@ -83,7 +83,6 @@ fn stop_process(item: Cow<str>) {
     }
 }
 
-// take care of this
 fn get_pid(it: Cow<str>) -> Option<i32> {
     let item: Vec<String> = it
         .split(" ")
@@ -107,7 +106,7 @@ fn get_pid(it: Cow<str>) -> Option<i32> {
         match pids {
             Some(pid) => match pid.parse().ok() {
                 Some(pid) => return Some(pid),
-                None => None,
+                None => return None,
             },
             None => return None,
         }
@@ -129,13 +128,19 @@ where
     );
 }
 
+fn get_time(p: &Process) -> String {
+    let time = NaiveDateTime::from_timestamp(p.start_time() as i64, 0);
+    let datetime_utc: DateTime<Utc> = DateTime::from_utc(time, Utc);
+    // let lstart: DateTime<Local> = DateTime::from(datetime_utc);
+    // let lstart = lstart.format("%a, %mb %e %Y %T").to_string();
+    let lstart = datetime_utc.to_string();
+    lstart
+}
+
 fn info(pid: i32) -> Result<()> {
     let s = System::new_all();
     if let Some(p) = s.get_process(pid) {
-        let time = NaiveDateTime::from_timestamp(p.start_time() as i64, 0);
-        let datetime_utc: DateTime<Utc> = DateTime::from_utc(time, Utc);
-        let lstart: DateTime<Local> = DateTime::from(datetime_utc);
-        let lstart = lstart.format("%a, %b %e %Y %T").to_string();
+        let lstart = get_time(p);
         highlight("Name", p.name());
         highlight("Pid", p.pid());
         highlight("Executable", p.exe());
