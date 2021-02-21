@@ -1,4 +1,4 @@
-use anyhow::{format_err, Result};
+use anyhow::{bail, format_err, Result};
 use chrono::prelude::*;
 use chrono::{DateTime, Utc};
 
@@ -31,7 +31,7 @@ fn main() -> Result<()> {
         match pid {
             Some(pid) => return info(pid),
             None => {
-                return Err(format_err!("unable to get process information"));
+                return Err(format_err!("unable to get pid"));
             }
         }
     }
@@ -57,7 +57,7 @@ fn main() -> Result<()> {
         .preview_window(Some("right:60%:wrap"))
         .header(Some("Filter Processes(ctrl+c to exit):"))
         .build()
-        .expect("Unable to run app");
+        .unwrap();
     let item_reader = SkimItemReader::default();
     let items = item_reader.of_bufread(Cursor::new(formatted_ps_names));
     Skim::run_with(&options, Some(items)).map(|out| match out.final_key {
@@ -78,10 +78,13 @@ fn stop_process(item: Cow<str>) {
         Some(pid) => {
             if let Some(process) = s.get_process(pid) {
                 process.kill(Signal::Term);
+            } else {
+                println!("Unable to get process information");
+                return;
             }
         }
         None => {
-            println!("Unable to stop process");
+            println!("Unable to get pid");
             return;
         }
     }
