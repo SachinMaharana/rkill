@@ -86,7 +86,6 @@ fn stop_process(item: Cow<str>) {
     }
 }
 
-// take care of this
 fn get_pid(it: Cow<str>) -> Option<i32> {
     let item: Vec<String> = it
         .split(" ")
