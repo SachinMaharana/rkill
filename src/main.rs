@@ -1,4 +1,4 @@
-use anyhow::{format_err, Result};
+use anyhow::{bail, format_err, Result};
 use chrono::prelude::*;
 use chrono::{DateTime, Utc};
 
@@ -21,19 +21,40 @@ use termion::color;
 struct Opt {
     #[structopt(short = "p", long, help = "Process PID in digits")]
     pid: Option<String>,
+
+    #[structopt(short, long, help = "show process information")]
+    info: bool,
 }
 
 fn main() -> Result<()> {
     let opt = Opt::from_args();
 
-    if let Some(pid) = opt.pid {
-        let pid = get_pid(pid.into());
-        match pid {
-            Some(pid) => return info(pid),
-            None => {
-                return Err(format_err!("unable to get process information"));
+    match (&opt.pid, opt.info) {
+        (Some(pid), true) => {
+            let pid = get_pid(pid.into());
+            match pid {
+                Some(pid) => return info(pid),
+                None => {
+                    return Err(format_err!("unable to get process information"));
+                }
             }
         }
+        (Some(pid), false) => {
+            let pid = get_pid(pid.into());
+            match pid {
+                Some(pid) => {
+                    stop_process(pid.to_string().into());
+                    return Ok(());
+                }
+                None => {
+                    return Err(format_err!("unable to get process information"));
+                }
+            }
+        }
+        (None, true) => {
+            bail!("See Usage: rkill -h")
+        }
+        (None, false) => {}
     }
 
     let processes = processes()?;
@@ -52,7 +73,7 @@ fn main() -> Result<()> {
     let options = SkimOptionsBuilder::default()
         .height(Some("40%"))
         .color(Some("molokai"))
-        .preview(Some("rkill -p {}"))
+        .preview(Some("rkill -i -p {}"))
         .preview_window(Some("right:60%:wrap"))
         .header(Some("Filter Processes(ctrl+c to exit):"))
         .build()
