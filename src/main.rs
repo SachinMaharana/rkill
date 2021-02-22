@@ -38,18 +38,17 @@ fn main() -> Result<()> {
     }
 
     let processes = processes()?;
-    let mut ps_names = Vec::new();
-
-    for p in processes {
-        let p = p?;
-        // prevent overflow of long process names
-        let name: String = p.name()?.chars().skip(0).take(23).collect();
-        ps_names.push(format!("{:25}{:<2}", name, p.pid().to_string(),));
-    }
-
-    ps_names.shuffle(&mut thread_rng());
-
-    let formatted_ps_names = ps_names.join("\n");
+    let ps_names = {
+        let mut ps_names = Vec::new();
+        for p in processes {
+            let p = p?;
+            // prevent overflow of long process names
+            let name: String = p.name()?.chars().skip(0).take(23).collect();
+            ps_names.push(format!("{:25}{:<2}", name, p.pid().to_string(),));
+        }
+        ps_names.shuffle(&mut thread_rng());
+        ps_names.join("\n")
+    };
 
     let options = SkimOptionsBuilder::default()
         .height(Some("50%"))
@@ -60,7 +59,7 @@ fn main() -> Result<()> {
         .build()
         .unwrap();
     let item_reader = SkimItemReader::default();
-    let items = item_reader.of_bufread(Cursor::new(formatted_ps_names));
+    let items = item_reader.of_bufread(Cursor::new(ps_names));
 
     if let Some(out) = Skim::run_with(&options, Some(items)) {
         if out.final_key == Key::Enter {
@@ -126,7 +125,7 @@ fn highlight<T>(present: &str, msg: T)
 where
     T: Debug,
 {
-    println!(
+    eprintln!(
         "{}{}: {} {:?}",
         color::Fg(color::Green),
         present,
