@@ -7,6 +7,7 @@ use psutil::process::processes;
 use rand::seq::SliceRandom;
 use rand::thread_rng;
 use skim::prelude::*;
+use std::convert::TryFrom;
 use std::fmt;
 use std::{io::Cursor, ops::Not};
 use structopt::StructOpt;
@@ -60,13 +61,14 @@ fn main() -> Result<()> {
         .unwrap();
     let item_reader = SkimItemReader::default();
     let items = item_reader.of_bufread(Cursor::new(formatted_ps_names));
-    Skim::run_with(&options, Some(items)).map(|out| match out.final_key {
-        Key::Enter => out
-            .selected_items
-            .iter()
-            .for_each(|i| stop_process(i.text().as_ref())),
-        _ => (),
-    });
+
+    if let Some(out) = Skim::run_with(&options, Some(items)) {
+        if out.final_key == Key::Enter {
+            out.selected_items
+                .iter()
+                .for_each(|i| stop_process(i.text().as_ref()));
+        }
+    };
     Ok(())
 }
 
@@ -79,20 +81,28 @@ fn stop_process(item: &str) {
             if let Some(process) = s.get_process(pid) {
                 process.kill(Signal::Term);
             } else {
-                println!("Unable to get process information");
-                return;
+                eprintln!("Unable to get process information");
             }
         }
         None => {
-            println!("Unable to get pid");
-            return;
+            eprintln!("Unable to get pid");
         }
     }
 }
 
 fn get_pid(it: &str) -> Option<i32> {
+    fn handle_arg(pids: Option<&String>) -> Option<i32> {
+        match pids {
+            Some(pid) => match pid.parse().ok() {
+                Some(pid) => Some(pid),
+                None => None,
+            },
+            None => None,
+        }
+    }
+
     let item: Vec<String> = it
-        .split(" ")
+        .split(' ')
         .filter_map(|s| s.is_empty().not().then(|| s.to_string()))
         .collect();
 
@@ -101,23 +111,13 @@ fn get_pid(it: &str) -> Option<i32> {
     };
 
     if item.len() == 1 {
-        let pids = item.iter().nth(0);
+        let pids = item.get(0);
         return handle_arg(pids);
     }
     if item.len() >= 2 {
-        let pids = item.iter().nth(1);
+        let pids = item.get(1);
         return handle_arg(pids);
     }
-
-    fn handle_arg(pids: Option<&String>) -> Option<i32> {
-        match pids {
-            Some(pid) => match pid.parse().ok() {
-                Some(pid) => return Some(pid),
-                None => return None,
-            },
-            None => return None,
-        }
-    };
 
     None
 }
@@ -135,18 +135,17 @@ where
     );
 }
 
-fn get_time(p: &Process) -> String {
-    let time = NaiveDateTime::from_timestamp(p.start_time() as i64, 0);
+fn get_time(p: &Process) -> Result<String> {
+    let time = NaiveDateTime::from_timestamp(i64::try_from(p.start_time())?, 0);
     // show time in utc
     let datetime_utc: DateTime<Utc> = DateTime::from_utc(time, Utc);
-    let lstart = datetime_utc.to_string();
-    lstart
+    Ok(datetime_utc.to_string())
 }
 
 fn info(pid: i32) -> Result<()> {
     let s = System::new_all();
     if let Some(p) = s.get_process(pid) {
-        let lstart = get_time(p);
+        let lstart = get_time(p)?;
         highlight("Name", p.name());
         highlight("Pid", p.pid());
         highlight("Executable", p.exe());
