@@ -1,4 +1,4 @@
-use anyhow::{format_err, Result};
+use anyhow::{bail, Result};
 use chrono::prelude::*;
 use chrono::{DateTime, Utc};
 
@@ -32,7 +32,7 @@ fn main() -> Result<()> {
         match pid {
             Some(pid) => return info(pid),
             None => {
-                return Err(format_err!("unable to get pid"));
+                bail!("unable to get pid")
             }
         }
     }
@@ -91,13 +91,7 @@ fn stop_process(item: &str) {
 
 fn get_pid(it: &str) -> Option<i32> {
     fn handle_arg(pids: Option<&String>) -> Option<i32> {
-        match pids {
-            Some(pid) => match pid.parse().ok() {
-                Some(pid) => Some(pid),
-                None => None,
-            },
-            None => None,
-        }
+        pids.and_then(|pid| pid.parse().ok())
     }
 
     let item: Vec<String> = it
@@ -105,26 +99,15 @@ fn get_pid(it: &str) -> Option<i32> {
         .filter_map(|s| s.is_empty().not().then(|| s.to_string()))
         .collect();
 
-    if item.is_empty() {
-        return None;
+    let pid = match item.len() {
+        0 => None,
+        1 => handle_arg(item.get(0)),
+        _ => handle_arg(item.get(1)),
     };
-
-    if item.len() == 1 {
-        let pids = item.get(0);
-        return handle_arg(pids);
-    }
-    if item.len() >= 2 {
-        let pids = item.get(1);
-        return handle_arg(pids);
-    }
-
-    None
+    pid
 }
 
-fn highlight<T>(present: &str, msg: T)
-where
-    T: Debug,
-{
+fn highlight(present: &str, msg: impl Debug) {
     eprintln!(
         "{}{}: {} {:?}",
         color::Fg(color::Green),
@@ -137,7 +120,7 @@ where
 fn get_time(p: &Process) -> Result<String> {
     let time = NaiveDateTime::from_timestamp(i64::try_from(p.start_time())?, 0);
     // show time in utc
-    let datetime_utc: DateTime<Utc> = DateTime::from_utc(time, Utc);
+    let datetime_utc = DateTime::<Utc>::from_utc(time, Utc);
     Ok(datetime_utc.to_string())
 }
 
@@ -151,8 +134,8 @@ fn info(pid: i32) -> Result<()> {
         highlight("Status", p.status());
         highlight("Cmd", p.cmd());
         highlight("Running Since", lstart);
+        Ok(())
     } else {
-        return Err(format_err!("unable to get process information"));
+        bail!("unable to get process information")
     }
-    Ok(())
 }
